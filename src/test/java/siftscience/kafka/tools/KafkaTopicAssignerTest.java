@@ -121,7 +121,7 @@ public class KafkaTopicAssignerTest {
                 topic, currentAssignment, newBrokers, Collections.<Integer, String>emptyMap(), -1);
 
         Map<Integer, Integer> brokerReplicaCounts = verifyPartitionsAndBuildReplicaCounts(
-                currentAssignment, newAssignment, 1);
+                currentAssignment, newAssignment, 0);
         Assert.assertFalse(brokerReplicaCounts.containsKey(12));
 
         // Ensure that no broker is doing too much
