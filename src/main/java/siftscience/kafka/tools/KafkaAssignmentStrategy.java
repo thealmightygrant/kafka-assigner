@@ -1,6 +1,14 @@
 package siftscience.kafka.tools;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.SortedMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.List;
+import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -337,7 +345,7 @@ public class KafkaAssignmentStrategy {
 
         public boolean canAcceptAsInitialNode(int partition) {
             return !assignedPartitions.contains(partition) &&
-                    assignedPartitions.size() < (capacity - 1) &&
+                    assignedPartitions.size() < Math.max(1,capacity - 2) &&
                     rack.canAccept(partition);
         }
 
