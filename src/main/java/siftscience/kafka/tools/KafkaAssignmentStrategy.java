@@ -1,12 +1,6 @@
 package siftscience.kafka.tools;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
+import java.util.*;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -159,29 +153,47 @@ public class KafkaAssignmentStrategy {
         return orphanedReplicas;
     }
 
+    private static List<Node> nodesByLeastLoaded(Collection<Node> nodes) {
+        List<Node> nodeList = new ArrayList<Node>();
+        Iterator<Node> nodeIt = nodes.iterator();
+        while (nodeIt.hasNext()) {
+            nodeList.add(nodeIt.next());
+        }
+
+        Collections.sort(nodeList, new Comparator<Node>() {
+            public int compare(Node o1, Node o2) {
+                if (o1.assignedPartitions.size() < o2.assignedPartitions.size()) {
+                    return -1;
+                } else {
+                    if (o1.assignedPartitions.size() > o2.assignedPartitions.size()) {
+                        return 1;
+                    }
+                }
+                return 0;
+            }
+        });
+        return nodeList;
+    }
+
     private static void assignOrphans(
             String topicName, SortedMap<Integer, Node> nodeMap,
             Map<Integer, Integer> orphanedReplicas) {
-        // Don't process nodes in the same order for all topics to ensure that topics with fewer
-        // replicas than nodes are equally likely to be assigned anywhere (and not overload the
-        // brokers with earlier IDs).
-        Integer[] nodeProcessingOrder = getNodeProcessingOrder(topicName, nodeMap.keySet());
-        List<Integer> nodeProcessingOrderList = Arrays.asList(nodeProcessingOrder);
-
         // Assign unassigned replicas to nodes that can accept them
         for (Map.Entry<Integer, Integer> e : orphanedReplicas.entrySet()) {
             int partition = e.getKey();
             int remainingReplicas = e.getValue();
-            Iterator<Integer> nodeIt = nodeProcessingOrderList.iterator();
+            Collection<Node> mynodes = nodeMap.values();
+            List<Node> nodeList = nodesByLeastLoaded(mynodes);
+            Iterator<Node> nodeIt = nodeList.iterator();
             while (nodeIt.hasNext() && remainingReplicas > 0) {
-                Node node = nodeMap.get(nodeIt.next());
+                Node node = nodeIt.next();
                 if (node.canAccept(partition)) {
                     node.accept(partition);
                     remainingReplicas--;
                 }
             }
             Preconditions.checkState(remainingReplicas == 0, "Partition " + partition +
-                    " could not be fully assigned!");
+                    " of topic: " + topic + " could not be fully assigned!");
         }
     }
 
