@@ -117,7 +117,7 @@ public class KafkaAssignmentStrategy {
                 if (nodeIt.hasNext()) {
                     int nodeId = nodeIt.next();
                     Node node = nodeMap.get(nodeId);
-                    if (node != null && node.canAccept(partition)) {
+                    if (node != null && node.canAcceptAsInitialNode(partition)) {
                         // The node from the current assignment must still exist and be able to
                         // accept the partition.
                         node.accept(partition);
@@ -320,6 +320,12 @@ public class KafkaAssignmentStrategy {
         public boolean canAccept(int partition) {
             return !assignedPartitions.contains(partition) &&
                     assignedPartitions.size() < capacity &&
+                    rack.canAccept(partition);
+        }
+
+        public boolean canAcceptAsInitialNode(int partition) {
+            return !assignedPartitions.contains(partition) &&
+                    assignedPartitions.size() < (capacity - 1) &&
                     rack.canAccept(partition);
         }
 
