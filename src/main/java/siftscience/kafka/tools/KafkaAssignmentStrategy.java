@@ -344,9 +344,8 @@ public class KafkaAssignmentStrategy {
         }
 
         public boolean canAcceptAsInitialNode(int partition) {
-            int difference = Math.max(0, capacity - assignedPartitions.size());
             return !assignedPartitions.contains(partition) &&
-                    assignedPartitions.size() < (capacity - difference) &&
+                    (assignedPartitions.size() < capacity) &&
                     rack.canAccept(partition);
         }
 
