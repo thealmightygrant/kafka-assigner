@@ -193,7 +193,7 @@ public class KafkaAssignmentStrategy {
                 }
             }
             Preconditions.checkState(remainingReplicas == 0, "Partition " + partition +
-                    " of topic: " + topic + " could not be fully assigned!");
+                    " of topic: " + topicName + " could not be fully assigned!");
         }
     }
 
