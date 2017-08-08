@@ -107,12 +107,14 @@ public class KafkaTopicAssignerTest {
     @Test
     public void testDecommission() {
         String topic = "test";
+        // We start with 4 brokers: {10,11,12,13}..
         Map<Integer, List<Integer>> currentAssignment = ImmutableMap.of(
                 0, (List<Integer>) ImmutableList.of(10, 11),
                 1, ImmutableList.of(11, 12),
                 2, ImmutableList.of(12, 13),
                 3, ImmutableList.of(13, 10)
         );
+        // .. and decommission one of them (12), so the new broker set is {10,11,13}.
         Set<Integer> newBrokers = ImmutableSet.of(10, 11, 13);
         KafkaTopicAssigner assigner = new KafkaTopicAssigner();
         Map<Integer, List<Integer>> newAssignment = assigner.generateAssignment(
