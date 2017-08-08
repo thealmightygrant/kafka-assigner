@@ -82,6 +82,12 @@ public class KafkaTopicAssignerTest {
     }
 
     @Test
+    public void testClusterRebalance() {
+        String topic = "test";
+        Assert.assertEquals(2,1);
+    }
+
+    @Test
     public void testDecommission() {
         String topic = "test";
         Map<Integer, List<Integer>> currentAssignment = ImmutableMap.of(
