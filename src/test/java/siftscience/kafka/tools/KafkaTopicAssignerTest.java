@@ -84,7 +84,23 @@ public class KafkaTopicAssignerTest {
     @Test
     public void testClusterRebalance() {
         String topic = "test";
-        Assert.assertEquals(2,1);
+        Map<Integer, List<Integer>> currentAssignment = new HashMap<Integer, List<Integer>>();
+        currentAssignment.put(0, ImmutableList.of(10, 11));
+        currentAssignment.put(1, ImmutableList.of(10,11));
+        currentAssignment.put(2, ImmutableList.of(10,11));
+        currentAssignment.put(3, ImmutableList.of(10,11));
+        currentAssignment.put(4, ImmutableList.of(10,11));
+        currentAssignment.put(5, ImmutableList.of(10,11));
+
+        Set<Integer> brokers = ImmutableSet.of(10,11, 12);
+        KafkaTopicAssigner assigner = new KafkaTopicAssigner();
+        Map<Integer, List<Integer>> newAssignment = assigner.generateAssignment(
+                topic, currentAssignment, brokers, Collections.<Integer, String>emptyMap(), 2);
+        Map<Integer, Integer> brokerReplicaCounts = verifyPartitionsAndBuildReplicaCounts(
+                currentAssignment, newAssignment, 1);
+        for (Map.Entry<Integer, Integer> brokerCount: brokerReplicaCounts.entrySet()) {
+            Assert.assertEquals(4, (int) brokerCount.getValue());
+        }
     }
 
     @Test
