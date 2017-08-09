@@ -361,7 +361,7 @@ public class KafkaAssignmentStrategy {
         }
 
         /**
-         * @param partition: Id of partition
+         * @param partition: Id of partition.
          * @return whether this broker can host the given partition, where the broker does not
          * currently host the partition.
          */
