@@ -367,7 +367,7 @@ public class KafkaAssignmentStrategy {
          */
         public boolean canAccept(int partition) {
             return !assignedPartitions.contains(partition) &&
-                    (assignedPartitions.size() < withCapacity) &&
+                    (assignedPartitions.size() < capacity) &&
                     rack.canAccept(partition);
         }
 
