@@ -1,14 +1,6 @@
 package siftscience.kafka.tools;
 
-import java.util.Comparator;
-import java.util.SortedMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.List;
-import java.util.Iterator;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -43,25 +35,36 @@ public class KafkaAssignmentStrategy {
             String topicName, Map<Integer, List<Integer>> currentAssignment,
             Map<Integer, String> nodeRackAssignment, Set<Integer> nodes, Set<Integer> partitions,
             int replicationFactor, Context context) {
-        // Initialize nodes with capacities and nothing assigned
         int maxReplicas = getMaxReplicasPerNode(nodes, partitions, replicationFactor);
-        SortedMap<Integer, Node> nodeMap = createNodeMap(nodeRackAssignment, nodes, maxReplicas);
+        int capacity = maxReplicas;
+        while (capacity > 0) {
+            try {
+                // Initialize nodes with capacities and nothing assigned
 
-        // Using the current assignment, reassign as many partitions as each node can accept
-        fillNodesFromAssignment(currentAssignment, nodeMap);
+                SortedMap<Integer, Node> nodeMap = createNodeMap(nodeRackAssignment, nodes, maxReplicas);
 
-        // Figure out the replicas that have not been assigned yet
-        Map<Integer, Integer> orphanedReplicas = getOrphanedReplicas(nodeMap, partitions,
-                replicationFactor);
+                // Using the current assignment, reassign as many partitions as each node can accept
+                fillNodesFromAssignment(currentAssignment, nodeMap, capacity);
 
-        // Assign those replicas to nodes that can accept them
-        assignOrphans(topicName, nodeMap, orphanedReplicas);
+                // Figure out the replicas that have not been assigned yet
+                Map<Integer, Integer> orphanedReplicas = getOrphanedReplicas(nodeMap, partitions,
+                        replicationFactor);
 
-        // Order nodes for each partition such that leadership is relatively balanced
-        if (context == null) {
-            context = new Context();
+                // Assign those replicas to nodes that can accept them
+                assignOrphans(topicName, nodeMap, orphanedReplicas);
+
+                // Order nodes for each partition such that leadership is relatively balanced
+                if (context == null) {
+                    context = new Context();
+                }
+                return computePreferenceLists(topicName, nodeMap, context);
+            } catch (IllegalStateException e) {
+                // retry assignOrphans with a smaller capacity..
+                capacity--;
+            }
         }
-        return computePreferenceLists(topicName, nodeMap, context);
+        // failed to create a rack-aware assignment
+        return new HashMap<Integer, List<Integer>>();
     }
 
     private static int getMaxReplicasPerNode(
@@ -101,7 +104,7 @@ public class KafkaAssignmentStrategy {
     }
 
     private static void fillNodesFromAssignment(
-            Map<Integer, List<Integer>> assignment, Map<Integer, Node> nodeMap) {
+            Map<Integer, List<Integer>> assignment, Map<Integer, Node> nodeMap, int useCapacity) {
         // Assign existing partitions back to nodes in a round-robin fashion. This ensures that
         // we prevent (when possible) multiple replicas of the same partition moving around in the
         // cluster at the same time. It also helps ensure that we have orphaned replicas that nodes
@@ -119,7 +122,7 @@ public class KafkaAssignmentStrategy {
                 if (nodeIt.hasNext()) {
                     int nodeId = nodeIt.next();
                     Node node = nodeMap.get(nodeId);
-                    if (node != null && node.canAcceptAsInitialNode(partition)) {
+                    if (node != null && node.canAcceptAsInitialNode(partition, useCapacity)) {
                         // The node from the current assignment must still exist and be able to
                         // accept the partition.
                         node.accept(partition);
@@ -343,9 +346,9 @@ public class KafkaAssignmentStrategy {
                     rack.canAccept(partition);
         }
 
-        public boolean canAcceptAsInitialNode(int partition) {
+        public boolean canAcceptAsInitialNode(int partition, int useCapacity) {
             return !assignedPartitions.contains(partition) &&
-                    (assignedPartitions.size() < capacity) &&
+                    (assignedPartitions.size() < useCapacity) &&
                     rack.canAccept(partition);
         }
 
