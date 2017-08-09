@@ -371,6 +371,12 @@ public class KafkaAssignmentStrategy {
                     rack.canAccept(partition);
         }
 
+        public boolean canAcceptAsInitialNode(int partition, int useCapacity) {
+            return !assignedPartitions.contains(partition) &&
+                    (assignedPartitions.size() < useCapacity) &&
+                    rack.canAccept(partition);
+        }
+
         public void accept(int partition) {
             Preconditions.checkArgument(canAccept(partition),
                     "Attempted to accept unacceptable partition " + partition);

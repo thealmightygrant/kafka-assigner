@@ -132,7 +132,7 @@ public class KafkaAssignmentGenerator {
             ZkUtils zkUtils, List<String> specifiedTopics, Set<Integer> specifiedBrokers,
             Set<Integer> excludedBrokers, Map<Integer, String> rackAssignment, int desiredReplicationFactor)
             throws JSONException {
-        // We need three inputs for rebalacing: the brokers, the topics, and the current assignment
+        // We need three inputs for rebalancing: the brokers, the topics, and the current assignment
         // of topics to brokers.
         Set<Integer> brokerSet = specifiedBrokers;
         if (brokerSet == null || brokerSet.isEmpty()) {
