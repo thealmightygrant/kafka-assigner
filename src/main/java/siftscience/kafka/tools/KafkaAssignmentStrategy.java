@@ -199,9 +199,10 @@ public class KafkaAssignmentStrategy {
             String topicName, SortedMap<Integer, Node> nodeMap,
             Map<Integer, Integer> orphanedReplicas) {
         // Assign unassigned replicas to nodes that can accept them
-        for (Map.Entry<Integer, Integer> e : orphanedReplicas.entrySet()) {
-            int partition = e.getKey();
-            int remainingReplicas = e.getValue();
+        List<Integer> partitions = new ArrayList<Integer>(orphanedReplicas.keySet());
+        Collections.shuffle(partitions);
+        for (Integer partition: partitions) {
+            int remainingReplicas = orphanedReplicas.get(partition);
             Collection<Node> mynodes = nodeMap.values();
             List<Node> nodeList = nodesByLeastLoaded(mynodes);
             Iterator<Node> nodeIt = nodeList.iterator();
